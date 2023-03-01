@@ -1,0 +1,42 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: pong-server-service
+spec:
+  selector:
+    app: pong-server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pong-server-example
+  labels:
+    app: pong-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pong-server
+  template:
+    metadata:
+      labels:
+        app: pong-server
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+      - name: pong-server
+        image: localhost:5001/server:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        args:
+        - -serverAddr=0.0.0.0:8081
+        - -targetAddr=ping-server-service:8080
+        command:
+        - ./server
